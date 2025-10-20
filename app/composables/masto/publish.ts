@@ -113,7 +113,7 @@ export function usePublish(options: {
     try {
       isSending.value = true
 
-      let status: mastodon.v1.Status
+      let status: mastodon.v1.Status | mastodon.v1.ScheduledStatus
       if (!draftItem.value.editingStatus) {
         status = await client.value.v1.statuses.create(payload)
       }
@@ -127,10 +127,21 @@ export function usePublish(options: {
           })),
         })
       }
-      if (draftItem.value.params.inReplyToId && !options.isPartOfThread)
-        navigateToStatus({ status })
 
-      draftItem.value = options.initialDraft()
+      // Handle navigation based on response type
+      if ('scheduledAt' in status) {
+        // ScheduledStatus was created - navigate to scheduled statuses page
+        draftItem.value = options.initialDraft()
+        if (import.meta.client)
+          useRouter().push('/scheduled-statuses')
+      }
+      else {
+        // Regular status was created - navigate to it if it's a reply
+        if (draftItem.value.params.inReplyToId && !options.isPartOfThread)
+          navigateToStatus({ status })
+
+        draftItem.value = options.initialDraft()
+      }
 
       return status
     }
