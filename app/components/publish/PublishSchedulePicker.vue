@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const scheduledAt = defineModel<string | undefined>()
-const { t } = useI18n()
 
 const showScheduleDialog = ref(false)
 const tempScheduledTime = ref('')
@@ -102,7 +101,7 @@ const minDateTime = computed(() => {
           <button btn-text @click="showScheduleDialog = false">
             {{ $t('action.cancel') }}
           </button>
-          <button btn-solid @click="applySchedule" :disabled="!tempScheduledTime">
+          <button btn-solid :disabled="!tempScheduledTime" @click="applySchedule">
             {{ $t('action.apply') }}
           </button>
         </div>

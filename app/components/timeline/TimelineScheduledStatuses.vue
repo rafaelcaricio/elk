@@ -8,13 +8,13 @@ onMounted(() => {
 })
 
 // Handle cancel event from card
-function handleCancel(id: string) {
+function handleCancel(_id: string) {
   // The composable already updates the local state
   // We could show a toast notification here if needed
 }
 
 // Handle update event from card
-function handleUpdate(id: string, scheduledAt: string) {
+function handleUpdate(_id: string, _scheduledAt: string) {
   // The composable already updates the local state
   // We could show a toast notification here if needed
 }

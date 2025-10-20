@@ -1,5 +1,4 @@
 import type { mastodon } from 'masto'
-import type { Ref } from 'vue'
 
 export function useScheduledStatuses() {
   const { client } = useMasto()

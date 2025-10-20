@@ -19,17 +19,44 @@ const timeago = useTimeAgo(() => props.scheduledStatus.scheduledAt, timeAgoOptio
 const showEditDialog = ref(false)
 const newScheduledTime = ref('')
 
+// Get minimum datetime (now)
+const minDateTime = computed(() => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+})
+
 async function handleCancel() {
   const result = await cancelScheduledStatus()
   if (result)
     emit('cancel', scheduledStatus.value.id)
 }
 
+function openEditDialog() {
+  // Convert ISO string to datetime-local format
+  if (props.scheduledStatus.scheduledAt) {
+    const date = new Date(props.scheduledStatus.scheduledAt)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    newScheduledTime.value = `${year}-${month}-${day}T${hours}:${minutes}`
+  }
+  showEditDialog.value = true
+}
+
 async function handleUpdate() {
   if (!newScheduledTime.value)
     return
 
-  const result = await updateScheduledTime(newScheduledTime.value)
+  // Convert datetime-local to ISO string
+  const isoTime = new Date(newScheduledTime.value).toISOString()
+  const result = await updateScheduledTime(isoTime)
   if (result) {
     showEditDialog.value = false
     emit('update', result.id, result.scheduledAt)
@@ -56,7 +83,7 @@ async function handleUpdate() {
           btn-text
           text-sm
           :disabled="isUpdating"
-          @click="showEditDialog = true"
+          @click="openEditDialog"
         >
           <div i-ri:edit-line />
           {{ $t('action.edit') }}
@@ -79,7 +106,7 @@ async function handleUpdate() {
     </div>
 
     <div>
-      {{ scheduledStatus.params.text || scheduledStatus.params.status }}
+      {{ scheduledStatus.params.text }}
     </div>
 
     <div v-if="scheduledStatus.mediaAttachments && scheduledStatus.mediaAttachments.length > 0" flex="~ wrap gap-2">
@@ -93,10 +120,10 @@ async function handleUpdate() {
     </div>
 
     <div v-if="scheduledStatus.params.visibility" flex="~ gap-2" items-center text-xs text-secondary>
-      <div i-ri:earth-line v-if="scheduledStatus.params.visibility === 'public'" />
-      <div i-ri:lock-unlock-line v-else-if="scheduledStatus.params.visibility === 'unlisted'" />
-      <div i-ri:lock-line v-else-if="scheduledStatus.params.visibility === 'private'" />
-      <div i-ri:mail-line v-else-if="scheduledStatus.params.visibility === 'direct'" />
+      <div v-if="scheduledStatus.params.visibility === 'public'" i-ri:earth-line />
+      <div v-else-if="scheduledStatus.params.visibility === 'unlisted'" i-ri:lock-unlock-line />
+      <div v-else-if="scheduledStatus.params.visibility === 'private'" i-ri:lock-line />
+      <div v-else-if="scheduledStatus.params.visibility === 'direct'" i-ri:mail-line />
       <span>{{ scheduledStatus.params.visibility }}</span>
     </div>
 
@@ -109,16 +136,18 @@ async function handleUpdate() {
         <input
           v-model="newScheduledTime"
           type="datetime-local"
+          :min="minDateTime"
           w-full
           p-2
           border="~ base rounded"
+          bg-base
           mb-4
         >
         <div flex="~ gap-2" justify-end>
           <button btn-text @click="showEditDialog = false">
             {{ $t('action.cancel') }}
           </button>
-          <button btn-solid @click="handleUpdate" :disabled="!newScheduledTime || isUpdating">
+          <button btn-solid :disabled="!newScheduledTime || isUpdating" @click="handleUpdate">
             {{ $t('action.save') }}
           </button>
         </div>
