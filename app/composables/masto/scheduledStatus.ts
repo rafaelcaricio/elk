@@ -1,4 +1,5 @@
 import type { mastodon } from 'masto'
+import type { Ref } from 'vue'
 
 export function useScheduledStatuses() {
   const { client } = useMasto()
@@ -86,19 +87,21 @@ export function useScheduledStatuses() {
 }
 
 export interface ScheduledStatusActionsProps {
-  scheduledStatus: mastodon.v1.ScheduledStatus
+  scheduledStatus: Ref<mastodon.v1.ScheduledStatus>
 }
 
 export function useScheduledStatusActions(props: ScheduledStatusActionsProps) {
-  const scheduledStatus = ref<mastodon.v1.ScheduledStatus>({ ...props.scheduledStatus })
+  // Create a local mutable copy that we can update when API calls succeed
+  const scheduledStatus = ref<mastodon.v1.ScheduledStatus>(props.scheduledStatus.value)
   const { client } = useMasto()
   const isDeleting = ref(false)
   const isUpdating = ref(false)
 
+  // Sync with prop changes (without deep watching since we're working with the value directly)
   watch(
-    () => props.scheduledStatus,
-    val => scheduledStatus.value = { ...val },
-    { deep: true, immediate: true },
+    () => props.scheduledStatus.value,
+    val => scheduledStatus.value = val,
+    { immediate: true },
   )
 
   async function cancelScheduledStatus() {

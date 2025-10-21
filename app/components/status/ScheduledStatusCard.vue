@@ -10,11 +10,11 @@ const emit = defineEmits<{
   update: [id: string, scheduledAt: string]
 }>()
 
-const { scheduledStatus, isDeleting, isUpdating, cancelScheduledStatus, updateScheduledTime } = useScheduledStatusActions({ scheduledStatus: toRef(() => props.scheduledStatus) })
+const { scheduledStatus: localScheduledStatus, isDeleting, isUpdating, cancelScheduledStatus, updateScheduledTime } = useScheduledStatusActions({ scheduledStatus: toRef(props, 'scheduledStatus') })
 
-const scheduledAt = useFormattedDateTime(props.scheduledStatus.scheduledAt)
+const scheduledAt = useFormattedDateTime(() => localScheduledStatus.value.scheduledAt)
 const timeAgoOptions = useTimeAgoOptions(true)
-const timeago = useTimeAgo(() => props.scheduledStatus.scheduledAt, timeAgoOptions)
+const timeago = useTimeAgo(() => localScheduledStatus.value.scheduledAt, timeAgoOptions)
 
 const showEditDialog = ref(false)
 const newScheduledTime = ref('')
@@ -33,13 +33,13 @@ const minDateTime = computed(() => {
 async function handleCancel() {
   const result = await cancelScheduledStatus()
   if (result)
-    emit('cancel', scheduledStatus.value.id)
+    emit('cancel', localScheduledStatus.value.id)
 }
 
 function openEditDialog() {
   // Convert ISO string to datetime-local format
-  if (props.scheduledStatus.scheduledAt) {
-    const date = new Date(props.scheduledStatus.scheduledAt)
+  if (localScheduledStatus.value.scheduledAt) {
+    const date = new Date(localScheduledStatus.value.scheduledAt)
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
@@ -74,7 +74,7 @@ async function handleUpdate() {
     <div flex="~ gap-2" items-center justify-between>
       <div flex="~ gap-2" items-center text-sm text-secondary>
         <div i-ri:calendar-schedule-line />
-        <time :datetime="scheduledStatus.scheduledAt" :title="scheduledAt">
+        <time :datetime="localScheduledStatus.scheduledAt" :title="scheduledAt">
           {{ timeago }}
         </time>
       </div>
@@ -101,17 +101,17 @@ async function handleUpdate() {
       </div>
     </div>
 
-    <div v-if="scheduledStatus.params.spoilerText" text-secondary>
-      <strong>CW:</strong> {{ scheduledStatus.params.spoilerText }}
+    <div v-if="localScheduledStatus.params.spoilerText" text-secondary>
+      <strong>CW:</strong> {{ localScheduledStatus.params.spoilerText }}
     </div>
 
     <div>
-      {{ scheduledStatus.params.text }}
+      {{ localScheduledStatus.params.text }}
     </div>
 
-    <div v-if="scheduledStatus.mediaAttachments && scheduledStatus.mediaAttachments.length > 0" flex="~ wrap gap-2">
+    <div v-if="localScheduledStatus.mediaAttachments && localScheduledStatus.mediaAttachments.length > 0" flex="~ wrap gap-2">
       <div
-        v-for="media in scheduledStatus.mediaAttachments"
+        v-for="media in localScheduledStatus.mediaAttachments"
         :key="media.id"
         class="media-preview"
       >
@@ -119,12 +119,12 @@ async function handleUpdate() {
       </div>
     </div>
 
-    <div v-if="scheduledStatus.params.visibility" flex="~ gap-2" items-center text-xs text-secondary>
-      <div v-if="scheduledStatus.params.visibility === 'public'" i-ri:earth-line />
-      <div v-else-if="scheduledStatus.params.visibility === 'unlisted'" i-ri:lock-unlock-line />
-      <div v-else-if="scheduledStatus.params.visibility === 'private'" i-ri:lock-line />
-      <div v-else-if="scheduledStatus.params.visibility === 'direct'" i-ri:mail-line />
-      <span>{{ scheduledStatus.params.visibility }}</span>
+    <div v-if="localScheduledStatus.params.visibility" flex="~ gap-2" items-center text-xs text-secondary>
+      <div v-if="localScheduledStatus.params.visibility === 'public'" i-ri:earth-line />
+      <div v-else-if="localScheduledStatus.params.visibility === 'unlisted'" i-ri:lock-unlock-line />
+      <div v-else-if="localScheduledStatus.params.visibility === 'private'" i-ri:lock-line />
+      <div v-else-if="localScheduledStatus.params.visibility === 'direct'" i-ri:mail-line />
+      <span>{{ localScheduledStatus.params.visibility }}</span>
     </div>
 
     <!-- Edit dialog -->

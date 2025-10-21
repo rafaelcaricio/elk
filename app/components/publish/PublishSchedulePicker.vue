@@ -9,8 +9,7 @@ const scheduledAtDisplay = computed(() => {
   if (!scheduledAt.value)
     return null
 
-  const date = new Date(scheduledAt.value)
-  return useFormattedDateTime(date)
+  return useFormattedDateTime(scheduledAt.value)
 })
 
 function openDialog() {
