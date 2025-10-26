@@ -31,17 +31,6 @@ export function useScheduledStatuses() {
     }
   }
 
-  async function getScheduledStatus(id: string) {
-    try {
-      return await client.value.v1.scheduledStatuses.$select(id).fetch()
-    }
-    catch (err) {
-      console.error(`Failed to fetch scheduled status ${id}:`, err)
-      error.value = (err as Error).message
-      return null
-    }
-  }
-
   async function cancelScheduledStatus(id: string) {
     try {
       await client.value.v1.scheduledStatuses.$select(id).remove()
@@ -80,7 +69,6 @@ export function useScheduledStatuses() {
     isLoading,
     error,
     fetchScheduledStatuses,
-    getScheduledStatus,
     cancelScheduledStatus,
     updateScheduledStatus,
   }

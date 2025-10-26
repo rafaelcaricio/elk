@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { scheduledStatuses, isLoading, error, fetchScheduledStatuses } = useScheduledStatuses()
+const { scheduledStatuses, isLoading, error, fetchScheduledStatuses, cancelScheduledStatus, updateScheduledStatus } = useScheduledStatuses()
 const { t } = useI18n()
 
 // Fetch scheduled statuses on mount
@@ -7,16 +7,14 @@ onMounted(() => {
   fetchScheduledStatuses()
 })
 
-// Handle cancel event from card
-function handleCancel(_id: string) {
-  // The composable already updates the local state
-  // We could show a toast notification here if needed
+// Handle cancel event from card - remove from list
+async function handleCancel(id: string) {
+  await cancelScheduledStatus(id)
 }
 
-// Handle update event from card
-function handleUpdate(_id: string, _scheduledAt: string) {
-  // The composable already updates the local state
-  // We could show a toast notification here if needed
+// Handle update event from card - update in list
+async function handleUpdate(id: string, scheduledAt: string) {
+  await updateScheduledStatus(id, scheduledAt)
 }
 </script>
 

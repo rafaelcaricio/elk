@@ -19,16 +19,18 @@ const timeago = useTimeAgo(() => localScheduledStatus.value.scheduledAt, timeAgo
 const showEditDialog = ref(false)
 const newScheduledTime = ref('')
 
-// Get minimum datetime (now)
-const minDateTime = computed(() => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  const hours = String(now.getHours()).padStart(2, '0')
-  const minutes = String(now.getMinutes()).padStart(2, '0')
+// Convert ISO string to datetime-local format (YYYY-MM-DDTHH:mm)
+function toDatetimeLocal(isoString: string): string {
+  const date = new Date(isoString)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
   return `${year}-${month}-${day}T${hours}:${minutes}`
-})
+}
+
+const minDateTime = computed(() => toDatetimeLocal(new Date().toISOString()))
 
 async function handleCancel() {
   const result = await cancelScheduledStatus()
@@ -37,16 +39,7 @@ async function handleCancel() {
 }
 
 function openEditDialog() {
-  // Convert ISO string to datetime-local format
-  if (localScheduledStatus.value.scheduledAt) {
-    const date = new Date(localScheduledStatus.value.scheduledAt)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    newScheduledTime.value = `${year}-${month}-${day}T${hours}:${minutes}`
-  }
+  newScheduledTime.value = toDatetimeLocal(localScheduledStatus.value.scheduledAt)
   showEditDialog.value = true
 }
 
@@ -54,9 +47,7 @@ async function handleUpdate() {
   if (!newScheduledTime.value)
     return
 
-  // Convert datetime-local to ISO string
-  const isoTime = new Date(newScheduledTime.value).toISOString()
-  const result = await updateScheduledTime(isoTime)
+  const result = await updateScheduledTime(new Date(newScheduledTime.value).toISOString())
   if (result) {
     showEditDialog.value = false
     emit('update', result.id, result.scheduledAt)
