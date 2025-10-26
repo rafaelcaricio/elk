@@ -25,6 +25,7 @@ const {
 
 const emit = defineEmits<{
   (evt: 'published', status: mastodon.v1.Status): void
+  (evt: 'scheduled', scheduledStatus: mastodon.v1.ScheduledStatus): void
 }>()
 
 const { t } = useI18n()
@@ -200,10 +201,15 @@ async function publish() {
 
   const publishResult = await (threadIsActive.value ? publishThread() : publishDraft())
   if (publishResult) {
-    if (Array.isArray(publishResult))
+    if (Array.isArray(publishResult)) {
       failedMessages.value = publishResult
-    else
+    }
+    else if ('scheduledAt' in publishResult) {
+      emit('scheduled', publishResult)
+    }
+    else {
       emit('published', publishResult)
+    }
   }
 }
 
@@ -541,6 +547,8 @@ const detectLanguage = useDebounceFn(async () => {
               </button>
             </CommonTooltip>
 
+            <PublishSchedulePicker v-if="!draft.editingStatus && !draft.params.inReplyToId" v-model="draft.params.scheduledAt" />
+
             <PublishVisibilityPicker v-model="draft.params.visibility" :editing="!!draft.editingStatus">
               <template #default="{ visibility }">
                 <button
@@ -593,6 +601,7 @@ const detectLanguage = useDebounceFn(async () => {
                 <template v-else>
                   <span v-if="draft.editingStatus">{{ $t('action.save_changes') }}</span>
                   <span v-else-if="draft.params.inReplyToId">{{ $t('action.reply') }}</span>
+                  <span v-else-if="draft.params.scheduledAt">{{ !isSending ? $t('scheduled_status.schedule') : $t('state.publishing') }}</span>
                   <span v-else>{{ !isSending ? $t('action.publish') : $t('state.publishing') }}</span>
                 </template>
               </button>
